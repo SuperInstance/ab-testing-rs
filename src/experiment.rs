@@ -15,7 +15,12 @@ pub struct Variant {
 
 impl Variant {
     pub fn new(name: &str) -> Self {
-        Self { name: name.into(), successes: 0, trials: 0, values: Vec::new() }
+        Self {
+            name: name.into(),
+            successes: 0,
+            trials: 0,
+            values: Vec::new(),
+        }
     }
 
     pub fn with_conversion(mut self, successes: usize, trials: usize) -> Self {
@@ -30,17 +35,28 @@ impl Variant {
     }
 
     pub fn conversion_rate(&self) -> f64 {
-        if self.trials == 0 { 0.0 } else { self.successes as f64 / self.trials as f64 }
+        if self.trials == 0 {
+            0.0
+        } else {
+            self.successes as f64 / self.trials as f64
+        }
     }
 
     pub fn mean(&self) -> f64 {
-        if self.values.is_empty() { 0.0 } else { self.values.iter().sum::<f64>() / self.values.len() as f64 }
+        if self.values.is_empty() {
+            0.0
+        } else {
+            self.values.iter().sum::<f64>() / self.values.len() as f64
+        }
     }
 
     pub fn std_dev(&self) -> f64 {
-        if self.values.len() < 2 { return 0.0; }
+        if self.values.len() < 2 {
+            return 0.0;
+        }
         let mean = self.mean();
-        let var = self.values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (self.values.len() - 1) as f64;
+        let var = self.values.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
+            / (self.values.len() - 1) as f64;
         var.sqrt()
     }
 
@@ -100,7 +116,10 @@ pub struct Experiment {
 
 impl Experiment {
     pub fn new(name: &str) -> Self {
-        Self { name: name.into(), variants: Vec::new() }
+        Self {
+            name: name.into(),
+            variants: Vec::new(),
+        }
     }
 
     pub fn add_variant(&mut self, variant: Variant) {
@@ -117,19 +136,32 @@ impl Experiment {
 
     /// Run chi-squared test on first two variants (conversion data).
     pub fn run_chi_squared(&self) -> Option<ChiSquaredResult> {
-        if self.variants.len() < 2 { return None; }
+        if self.variants.len() < 2 {
+            return None;
+        }
         let a = &self.variants[0];
         let b = &self.variants[1];
-        if a.trials == 0 || b.trials == 0 { return None; }
-        Some(chi_squared_test(a.successes, a.trials, b.successes, b.trials))
+        if a.trials == 0 || b.trials == 0 {
+            return None;
+        }
+        Some(chi_squared_test(
+            a.successes,
+            a.trials,
+            b.successes,
+            b.trials,
+        ))
     }
 
     /// Run Welch's t-test on first two variants (continuous data).
     pub fn run_welch_t(&self) -> Option<WelchTResult> {
-        if self.variants.len() < 2 { return None; }
+        if self.variants.len() < 2 {
+            return None;
+        }
         let a = &self.variants[0];
         let b = &self.variants[1];
-        if a.values.is_empty() || b.values.is_empty() { return None; }
+        if a.values.is_empty() || b.values.is_empty() {
+            return None;
+        }
         Some(welch_t_test(&a.values, &b.values))
     }
 
@@ -138,26 +170,48 @@ impl Experiment {
         let chi2 = self.run_chi_squared();
         let welch = self.run_welch_t();
 
-        let summaries: Vec<VariantSummary> = self.variants.iter().map(VariantSummary::from).collect();
+        let summaries: Vec<VariantSummary> =
+            self.variants.iter().map(VariantSummary::from).collect();
 
         let winner = if let Some(ref w) = welch {
             if w.significant {
-                Some(if w.mean_a > w.mean_b { self.variants[0].name.clone() } else { self.variants[1].name.clone() })
-            } else { None }
+                Some(if w.mean_a > w.mean_b {
+                    self.variants[0].name.clone()
+                } else {
+                    self.variants[1].name.clone()
+                })
+            } else {
+                None
+            }
         } else if let Some(ref c) = chi2 {
             if c.significant {
                 let rate_a = self.variants[0].conversion_rate();
                 let rate_b = self.variants[1].conversion_rate();
-                Some(if rate_a > rate_b { self.variants[0].name.clone() } else { self.variants[1].name.clone() })
-            } else { None }
-        } else { None };
+                Some(if rate_a > rate_b {
+                    self.variants[0].name.clone()
+                } else {
+                    self.variants[1].name.clone()
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        };
 
         let recommendation = match &winner {
             Some(w) => format!("Winner: {} — statistically significant difference detected", w),
             None => "No statistically significant difference. Continue collecting data or stop the test.".into(),
         };
 
-        ExperimentReport { name: self.name.clone(), variant_summaries: summaries, chi_squared: chi2, welch_t: welch, winner, recommendation }
+        ExperimentReport {
+            name: self.name.clone(),
+            variant_summaries: summaries,
+            chi_squared: chi2,
+            welch_t: welch,
+            winner,
+            recommendation,
+        }
     }
 }
 
