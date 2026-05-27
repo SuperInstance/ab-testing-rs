@@ -37,8 +37,8 @@ pub fn chi_squared_test(
     let b_fail = trials_b - successes_b;
     let total = trials_a + trials_b;
 
-    let prop_a = successes_a as f64 / trials_a as f64;
-    let prop_b = successes_b as f64 / trials_b as f64;
+    let _prop_a = successes_a as f64 / trials_a as f64;
+    let _prop_b = successes_b as f64 / trials_b as f64;
     let pooled = (successes_a + successes_b) as f64 / total as f64;
 
     let expected_a_s = pooled * trials_a as f64;
