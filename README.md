@@ -60,3 +60,5 @@ println!("Conversion rate: {:.1}% ± {:.1}%", ci.mean * 100.0, (ci.upper - ci.lo
 ## License
 
 MIT
+
+Part of the [SuperInstance OpenConstruct](https://github.com/SuperInstance/OpenConstruct) ecosystem.
